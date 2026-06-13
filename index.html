@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OAT Physics — Unit Breakdown Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d1521;
+    --panel:#16212f;
+    --panel-2:#1c2a3a;
+    --line:#2a3a4f;
+    --ink:#e7eef5;
+    --muted:#8195ac;
+    --amber:#f2b441;
+    /* dimension colors — one per SI base unit */
+    --d-kg:#f2789b;   /* mass */
+    --d-m:#5fc8ec;    /* length */
+    --d-s:#f2b441;    /* time */
+    --d-A:#86d56a;    /* current */
+    --d-K:#c08bf2;    /* temperature */
+    --d-mol:#ec955a;  /* amount */
+    --d-cd:#aab6c4;   /* luminous intensity */
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:
+      radial-gradient(900px 500px at 80% -10%, rgba(95,200,236,.08), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;flex-direction:column;align-items:center;
+    padding:22px 16px 40px;
+    min-height:100%;
+  }
+  .wrap{width:100%;max-width:560px}
+
+  header{margin-bottom:18px}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--muted);display:flex;align-items:center;gap:8px;
+  }
+  .eyebrow::before{content:"";width:18px;height:1px;background:var(--amber)}
+  h1{font-size:25px;font-weight:700;line-height:1.15;margin:7px 0 6px}
+  h1 span{color:var(--amber)}
+  .sub{font-size:13.5px;color:var(--muted);line-height:1.45}
+  .sub code{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-size:12.5px}
+
+  /* filter chips */
+  .filters{display:flex;flex-wrap:wrap;gap:7px;margin:16px 0 14px}
+  .chip{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.04em;
+    color:var(--muted);background:transparent;border:1px solid var(--line);
+    padding:6px 11px;border-radius:999px;cursor:pointer;transition:.15s;
+  }
+  .chip:hover{color:var(--ink);border-color:#3a506b}
+  .chip.active{color:var(--bg);background:var(--amber);border-color:var(--amber);font-weight:600}
+
+  /* card */
+  .stage{perspective:1600px;margin-bottom:14px}
+  .card{
+    position:relative;width:100%;aspect-ratio:3/2;min-height:230px;
+    transform-style:preserve-3d;transition:transform .5s cubic-bezier(.4,.1,.2,1);
+    cursor:pointer;
+  }
+  .card.flipped{transform:rotateY(180deg)}
+  .face{
+    position:absolute;inset:0;backface-visibility:hidden;
+    border:1px solid var(--line);border-radius:16px;
+    padding:24px 22px;display:flex;flex-direction:column;
+    background:linear-gradient(160deg,var(--panel-2),var(--panel));
+    box-shadow:0 18px 40px -22px rgba(0,0,0,.8);
+  }
+  .face .corner{
+    position:absolute;top:14px;right:16px;
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .face .tag{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--amber);margin-bottom:auto;
+  }
+
+  /* front */
+  .front{justify-content:center;text-align:center}
+  .front .qty{font-size:30px;font-weight:700;line-height:1.1}
+  .front .sym{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--muted);margin-top:8px}
+  .front .hint{
+    position:absolute;bottom:16px;left:0;right:0;text-align:center;
+    font-size:11px;color:var(--muted);
+  }
+
+  /* back */
+  .back{transform:rotateY(180deg);justify-content:center}
+  .back .qty-sm{font-size:14px;font-weight:600;color:var(--muted);margin-bottom:14px}
+  .block{margin:7px 0}
+  .block .lbl{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:4px;
+  }
+  .common{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:500;color:var(--ink)}
+  .base{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;letter-spacing:.01em}
+  .note{font-size:11.5px;color:var(--muted);line-height:1.4;margin-top:13px;border-top:1px solid var(--line);padding-top:10px}
+
+  /* colored base tokens */
+  .u-kg{color:var(--d-kg)} .u-m{color:var(--d-m)} .u-s{color:var(--d-s)}
+  .u-A{color:var(--d-A)} .u-K{color:var(--d-K)} .u-mol{color:var(--d-mol)} .u-cd{color:var(--d-cd)}
+  .dim0{color:var(--muted);font-style:italic;font-size:16px}
+
+  /* build-up ladder */
+  .card.build{aspect-ratio:auto;min-height:440px}
+  .card.build .back{justify-content:flex-start}
+  #b-build{display:none;flex-direction:column;width:100%;overflow-y:auto;margin-top:2px}
+  .step{padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(13,21,33,.55)}
+  .step-f{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:3px}
+  .step-r{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .step-u{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:var(--ink)}
+  .step-b{font-family:'IBM Plex Mono',monospace;font-size:13.5px}
+  .connector{text-align:center;color:var(--amber);font-size:13px;line-height:1;margin:3px 0}
+  .tie{font-size:10.5px;color:var(--amber);margin-top:6px;font-style:italic}
+
+  /* controls */
+  .controls{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .nav{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;
+    background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    padding:11px 16px;border-radius:11px;cursor:pointer;transition:.15s;flex:0 0 auto;
+  }
+  .nav:hover{border-color:#3a506b;background:var(--panel-2)}
+  .nav:active{transform:translateY(1px)}
+  .counter{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);text-align:center;flex:1}
+  .counter b{color:var(--ink)}
+
+  .util{display:flex;gap:8px;margin-top:12px;justify-content:center}
+  .util button{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.04em;
+    background:transparent;border:1px solid var(--line);color:var(--muted);
+    padding:7px 13px;border-radius:9px;cursor:pointer;transition:.15s;
+  }
+  .util button:hover{color:var(--ink);border-color:#3a506b}
+
+  /* legend */
+  .legend{
+    margin-top:24px;border:1px solid var(--line);border-radius:14px;
+    padding:14px 16px;background:rgba(22,33,47,.5);
+  }
+  .legend .lh{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:11px;
+  }
+  .legend .grid{display:flex;flex-wrap:wrap;gap:10px 16px}
+  .leg{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+  .leg .sw{width:11px;height:11px;border-radius:3px}
+  .leg b{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-size:12.5px}
+
+  .foot{margin-top:18px;font-size:11px;color:var(--muted);text-align:center;line-height:1.5}
+  kbd{font-family:'IBM Plex Mono',monospace;background:var(--panel);border:1px solid var(--line);
+      border-radius:5px;padding:1px 6px;font-size:11px;color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">OAT Physics · Dimensional Analysis</div>
+    <h1>Unit Breakdown <span>Deck</span></h1>
+    <p class="sub">Every quantity decomposed into SI base units so you can cancel terms through a problem. Tap a card to flip. Example: <code>Momentum (p) = kg·m/s = N·s</code>.</p>
+  </header>
+
+  <div class="filters" id="filters"></div>
+
+  <div class="stage">
+    <div class="card" id="card" onclick="flip()">
+      <div class="face front">
+        <div class="tag" id="f-cat"></div>
+        <div style="margin:auto 0">
+          <div class="qty" id="f-qty"></div>
+          <div class="sym" id="f-sym"></div>
+        </div>
+        <div class="hint" id="f-hint">tap to reveal units →</div>
+      </div>
+      <div class="face back">
+        <div class="corner" id="b-cat"></div>
+        <div class="qty-sm" id="b-qty"></div>
+        <div id="b-standard">
+          <div class="block">
+            <div class="lbl">Common unit</div>
+            <div class="common" id="b-common"></div>
+          </div>
+          <div class="block">
+            <div class="lbl">SI base units</div>
+            <div class="base" id="b-base"></div>
+          </div>
+          <div class="note" id="b-note" style="display:none"></div>
+        </div>
+        <div id="b-build"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="nav" onclick="prev(event)">← Prev</button>
+    <div class="counter"><b id="idx">1</b> / <span id="total">1</span></div>
+    <button class="nav" onclick="next(event)">Next →</button>
+  </div>
+  <div class="util">
+    <button onclick="shuffle(event)">🔀 Shuffle</button>
+    <button onclick="resetOrder(event)">↺ Reset order</button>
+  </div>
+
+  <div class="legend">
+    <div class="lh">Base-unit color key</div>
+    <div class="grid">
+      <div class="leg"><span class="sw" style="background:var(--d-kg)"></span><b>kg</b> mass</div>
+      <div class="leg"><span class="sw" style="background:var(--d-m)"></span><b>m</b> length</div>
+      <div class="leg"><span class="sw" style="background:var(--d-s)"></span><b>s</b> time</div>
+      <div class="leg"><span class="sw" style="background:var(--d-A)"></span><b>A</b> current</div>
+      <div class="leg"><span class="sw" style="background:var(--d-K)"></span><b>K</b> temp</div>
+      <div class="leg"><span class="sw" style="background:var(--d-mol)"></span><b>mol</b> amount</div>
+      <div class="leg"><span class="sw" style="background:var(--d-cd)"></span><b>cd</b> luminous</div>
+    </div>
+  </div>
+
+  <p class="foot">Keys: <kbd>Space</kbd> flip · <kbd>←</kbd> <kbd>→</kbd> navigate · <kbd>S</kbd> shuffle</p>
+</div>
+
+<script>
+/* Base-unit strings use bracket tokens [kg][m][s][A][K][mol][cd] with optional exponent
+   directly after, e.g. [m]2 or [s]-2. The renderer colors each token + its exponent. */
+const CARDS = [
+  // ---- MECHANICS ----
+  {cat:"Mechanics", qty:"Distance / Displacement", sym:"d, Δd", common:"m", base:"[m]"},
+  {cat:"Mechanics", qty:"Velocity / Speed", sym:"v, s", common:"m/s", base:"[m]/[s]"},
+  {cat:"Mechanics", qty:"Acceleration", sym:"a", common:"m/s²", base:"[m]/[s]2"},
+  {cat:"Mechanics", qty:"Force / Weight", sym:"F, Fg", common:"N", base:"[kg]·[m]/[s]2", note:"1 N = 1 kg·m/s² — the anchor for almost everything mechanical."},
+  {cat:"Mechanics", qty:"Momentum", sym:"p", common:"kg·m/s  =  N·s", base:"[kg]·[m]/[s]"},
+  {cat:"Mechanics", qty:"Impulse", sym:"F·Δt", common:"N·s", base:"[kg]·[m]/[s]", note:"Same base units as momentum — impulse–momentum theorem (F·Δt = Δp)."},
+  {cat:"Mechanics", qty:"Work / Energy", sym:"W, KE, U, Q", common:"J  =  N·m", base:"[kg]·[m]2/[s]2", note:"Joule = N·m. KE, PE, heat, and electrical energy all reduce to this."},
+  {cat:"Mechanics", qty:"Power", sym:"P", common:"W  =  J/s", base:"[kg]·[m]2/[s]3"},
+  {cat:"Mechanics", qty:"Pressure", sym:"P", common:"Pa  =  N/m²", base:"[kg]/([m]·[s]2)"},
+  {cat:"Mechanics", qty:"Torque", sym:"τ", common:"N·m", base:"[kg]·[m]2/[s]2", note:"Identical base units to energy, but a distinct quantity (a vector cross product)."},
+  {cat:"Mechanics", qty:"Density", sym:"ρ", common:"kg/m³", base:"[kg]/[m]3"},
+  {cat:"Mechanics", qty:"Frequency", sym:"f", common:"Hz  =  s⁻¹", base:"1/[s]"},
+  {cat:"Mechanics", qty:"Period", sym:"T", common:"s", base:"[s]"},
+  {cat:"Mechanics", qty:"Angular velocity", sym:"ω", common:"rad/s", base:"1/[s]", note:"Radians are dimensionless, so ω carries only s⁻¹."},
+  {cat:"Mechanics", qty:"Angular acceleration", sym:"α", common:"rad/s²", base:"1/[s]2"},
+  {cat:"Mechanics", qty:"Moment of inertia", sym:"I", common:"kg·m²", base:"[kg]·[m]2"},
+  {cat:"Mechanics", qty:"Spring constant", sym:"k", common:"N/m", base:"[kg]/[s]2"},
+  {cat:"Mechanics", qty:"Wavelength", sym:"λ", common:"m", base:"[m]"},
+
+  // ---- THERMODYNAMICS ----
+  {cat:"Thermo", qty:"Temperature", sym:"T", common:"K", base:"[K]"},
+  {cat:"Thermo", qty:"Heat", sym:"Q", common:"J", base:"[kg]·[m]2/[s]2", note:"Heat is energy — same base units as work."},
+  {cat:"Thermo", qty:"Specific heat", sym:"c", common:"J/(kg·K)", base:"[m]2/([s]2·[K])", note:"OAT sheet lists J/(g·K); SI base form uses kg."},
+  {cat:"Thermo", qty:"Thermal conductivity", sym:"K", common:"W/(m·K)", base:"[kg]·[m]/([s]3·[K])"},
+
+  // ---- ELECTRICITY & MAGNETISM ----
+  {cat:"E & M", qty:"Electric charge", sym:"Q, q", common:"C  =  A·s", base:"[A]·[s]", note:"From I = Q/t, so coulomb = ampere·second."},
+  {cat:"E & M", qty:"Current", sym:"I", common:"A", base:"[A]"},
+  {cat:"E & M", qty:"Electric field", sym:"E", common:"N/C  =  V/m", base:"[kg]·[m]/([A]·[s]3)"},
+  {cat:"E & M", qty:"Electric potential / Voltage", sym:"V, ΔV", common:"V  =  J/C", base:"[kg]·[m]2/([A]·[s]3)"},
+  {cat:"E & M", qty:"Resistance", sym:"R", common:"Ω  =  V/A", base:"[kg]·[m]2/([A]2·[s]3)"},
+  {cat:"E & M", qty:"Resistivity", sym:"ρ", common:"Ω·m", base:"[kg]·[m]3/([A]2·[s]3)"},
+  {cat:"E & M", qty:"Capacitance", sym:"C", common:"F  =  C/V", base:"[A]2·[s]4/([kg]·[m]2)"},
+
+  // ---- OPTICS ----
+  {cat:"Optics", qty:"Index of refraction", sym:"n", common:"(unitless)", base:"DIMLESS", note:"A ratio of speeds (c/v) — units cancel completely."},
+  {cat:"Optics", qty:"Magnification", sym:"M", common:"(unitless)", base:"DIMLESS", note:"A ratio of heights or distances — no units."},
+  {cat:"Optics", qty:"Lens power", sym:"P", common:"D (diopter)  =  m⁻¹", base:"1/[m]"},
+
+  // ---- CONSTANTS ----
+  {cat:"Constants", qty:"Speed of light", sym:"c", common:"m/s", base:"[m]/[s]"},
+  {cat:"Constants", qty:"Gravitational constant", sym:"G", common:"N·m²/kg²", base:"[m]3/([kg]·[s]2)"},
+  {cat:"Constants", qty:"Coulomb's constant", sym:"k", common:"N·m²/C²", base:"[kg]·[m]3/([A]2·[s]4)"},
+  {cat:"Constants", qty:"Permittivity of free space", sym:"ε₀", common:"C²/(N·m²)  =  F/m", base:"[A]2·[s]4/([kg]·[m]3)"},
+  {cat:"Constants", qty:"Boltzmann constant", sym:"k_B", common:"J/K", base:"[kg]·[m]2/([s]2·[K])"},
+  {cat:"Constants", qty:"Gas constant", sym:"R", common:"J/(mol·K)", base:"[kg]·[m]2/([s]2·[mol]·[K])"},
+
+  // ---- BASE UNITS ----
+  {cat:"Base units", qty:"Mass", sym:"m", common:"kilogram", base:"[kg]"},
+  {cat:"Base units", qty:"Length", sym:"l", common:"meter", base:"[m]"},
+  {cat:"Base units", qty:"Time", sym:"t", common:"second", base:"[s]"},
+  {cat:"Base units", qty:"Electric current", sym:"I", common:"ampere", base:"[A]"},
+  {cat:"Base units", qty:"Temperature", sym:"T", common:"kelvin", base:"[K]"},
+  {cat:"Base units", qty:"Amount of substance", sym:"n", common:"mole", base:"[mol]"},
+  {cat:"Base units", qty:"Luminous intensity", sym:"Iᵥ", common:"candela", base:"[cd]"},
+
+  // ---- BUILD-UPS ----
+  {cat:"Build-ups", qty:"Force → Energy → Power", sym:"the mechanical chain", build:true, steps:[
+    {f:"start with base units", u:"kg · m · s", b:"[kg]  [m]  [s]"},
+    {f:"a = Δv / t", u:"m/s²", b:"[m]/[s]2"},
+    {f:"F = m · a", u:"N", b:"[kg]·[m]/[s]2"},
+    {f:"W = F · d", u:"J  =  N·m", b:"[kg]·[m]2/[s]2"},
+    {f:"P = W / t", u:"W  =  J/s", b:"[kg]·[m]2/[s]3"},
+  ]},
+  {cat:"Build-ups", qty:"Force → Pressure", sym:"the area branch", build:true, steps:[
+    {f:"F = m · a", u:"N", b:"[kg]·[m]/[s]2"},
+    {f:"P = F / A   (÷ m²)", u:"Pa  =  N/m²", b:"[kg]/([m]·[s]2)"},
+  ]},
+  {cat:"Build-ups", qty:"Charge → Voltage → Resistance → Power", sym:"the electrical chain", build:true, steps:[
+    {f:"Q = I · t", u:"C", b:"[A]·[s]"},
+    {f:"V = energy / charge  (J/C)", u:"V", b:"[kg]·[m]2/([A]·[s]3)"},
+    {f:"R = V / I", u:"Ω", b:"[kg]·[m]2/([A]2·[s]3)"},
+    {f:"P = I · V", u:"W", b:"[kg]·[m]2/[s]3", tie:"lands on the same base units as mechanical power — the A's cancel."},
+  ]},
+  {cat:"Build-ups", qty:"Momentum  =  Impulse", sym:"two routes, one unit", build:true, steps:[
+    {f:"p = m · v", u:"kg·m/s", b:"[kg]·[m]/[s]"},
+    {f:"J = F · Δt  (N·s)", u:"N·s", b:"[kg]·[m]/[s]", tie:"impulse reduces to the exact same base units as momentum."},
+  ]},
+];
+
+const CATS = ["All","Mechanics","Thermo","E & M","Optics","Constants","Base units","Build-ups"];
+
+// render base-unit string with colored tokens
+function renderBase(str){
+  if(str==="DIMLESS") return '<span class="dim0">dimensionless</span>';
+  // replace [unit] (with optional following exponent like 2 or -2) with colored spans
+  return str.replace(/\[(kg|mol|cd|m|s|A|K)\](-?\d+)?/g, (match, unit, exp)=>{
+    const e = exp ? `<sup>${exp}</sup>` : '';
+    return `<span class="u-${unit}">${unit}${e}</span>`;
+  });
+}
+
+let deck = [...CARDS];
+let order = deck.map((_,i)=>i);
+let pos = 0;
+let activeCat = "All";
+
+const card = document.getElementById('card');
+
+function applyFilter(){
+  deck = activeCat==="All" ? [...CARDS] : CARDS.filter(c=>c.cat===activeCat);
+  order = deck.map((_,i)=>i);
+  pos = 0;
+  render();
+}
+
+function renderSteps(steps){
+  return steps.map((s,i)=>{
+    const conn = i>0 ? '<div class="connector">↓</div>' : '';
+    const tie = s.tie ? `<div class="tie">${s.tie}</div>` : '';
+    return conn + `<div class="step">
+      <div class="step-f">${s.f}</div>
+      <div class="step-r"><span class="step-u">${s.u}</span><span class="step-b">${renderBase(s.b)}</span></div>
+      ${tie}
+    </div>`;
+  }).join('');
+}
+
+function render(){
+  const c = deck[order[pos]];
+  card.classList.remove('flipped');
+  document.getElementById('f-cat').textContent = c.cat;
+  document.getElementById('f-qty').textContent = c.qty;
+  document.getElementById('f-sym').textContent = c.sym;
+  document.getElementById('b-cat').textContent = c.cat;
+  document.getElementById('b-qty').textContent = c.qty + " ("+c.sym+")";
+
+  const std = document.getElementById('b-standard');
+  const bld = document.getElementById('b-build');
+  if(c.build){
+    card.classList.add('build');
+    document.getElementById('f-hint').textContent = "tap to see the chain →";
+    std.style.display = 'none';
+    bld.style.display = 'flex';
+    bld.innerHTML = renderSteps(c.steps);
+  } else {
+    card.classList.remove('build');
+    document.getElementById('f-hint').textContent = "tap to reveal units →";
+    std.style.display = 'block';
+    bld.style.display = 'none';
+    document.getElementById('b-common').textContent = c.common;
+    document.getElementById('b-base').innerHTML = renderBase(c.base);
+    const noteEl = document.getElementById('b-note');
+    if(c.note){ noteEl.style.display='block'; noteEl.textContent = c.note; }
+    else { noteEl.style.display='none'; }
+  }
+  document.getElementById('idx').textContent = pos+1;
+  document.getElementById('total').textContent = deck.length;
+}
+
+function flip(){ card.classList.toggle('flipped'); }
+function next(e){ if(e)e.stopPropagation(); pos=(pos+1)%deck.length; render(); }
+function prev(e){ if(e)e.stopPropagation(); pos=(pos-1+deck.length)%deck.length; render(); }
+function shuffle(e){
+  if(e)e.stopPropagation();
+  for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
+  pos=0; render();
+}
+function resetOrder(e){ if(e)e.stopPropagation(); order=deck.map((_,i)=>i); pos=0; render(); }
+
+// chips
+const fwrap = document.getElementById('filters');
+CATS.forEach(cat=>{
+  const b=document.createElement('button');
+  b.className='chip'+(cat==="All"?' active':'');
+  b.textContent=cat;
+  b.onclick=()=>{
+    activeCat=cat;
+    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    applyFilter();
+  };
+  fwrap.appendChild(b);
+});
+
+// keyboard
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();flip();}
+  else if(e.code==='ArrowRight')next();
+  else if(e.code==='ArrowLeft')prev();
+  else if(e.key==='s'||e.key==='S')shuffle();
+});
+
+document.getElementById('total').textContent = deck.length;
+render();
+</script>
+</body>
+</html>
