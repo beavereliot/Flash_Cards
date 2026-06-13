@@ -145,6 +145,26 @@
   }
   .util button:hover{color:var(--ink);border-color:#3a506b}
 
+  /* status row */
+  .status-row{display:flex;gap:7px;margin-top:12px}
+  .status-btn{
+    flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.03em;
+    background:var(--panel);border:1px solid var(--line);color:var(--muted);
+    padding:9px 6px;border-radius:10px;cursor:pointer;transition:.15s;
+  }
+  .status-btn:hover:not(:disabled){color:var(--ink);border-color:#3a506b}
+  .status-btn:disabled{opacity:.4;cursor:default}
+  .status-btn .dot{width:9px;height:9px;border-radius:50%;background:var(--line);flex:0 0 auto;transition:.15s}
+  .status-btn[data-level="new"] .dot{background:#e8688a}
+  .status-btn[data-level="understood"] .dot{background:var(--d-m)}
+  .status-btn[data-level="mastered"] .dot{background:var(--d-A)}
+  .status-btn.active{color:var(--ink);font-weight:600}
+  .status-btn[data-level="new"].active{border-color:#e8688a;background:rgba(232,104,138,.12)}
+  .status-btn[data-level="understood"].active{border-color:var(--d-m);background:rgba(95,200,236,.12)}
+  .status-btn[data-level="mastered"].active{border-color:var(--d-A);background:rgba(134,213,106,.12)}
+  .status-note{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);text-align:center;margin-top:9px}
+
   /* legend */
   .legend{
     margin-top:24px;border:1px solid var(--line);border-radius:14px;
@@ -235,6 +255,13 @@
     <div class="counter"><b id="idx">1</b> / <span id="total">1</span></div>
     <button class="nav" onclick="next(event)">Next →</button>
   </div>
+  <div class="status-row" id="status-row">
+    <button class="status-btn" data-level="new" onclick="markCurrent('new')"><span class="dot"></span>Not understood</button>
+    <button class="status-btn" data-level="understood" onclick="markCurrent('understood')"><span class="dot"></span>Understood</button>
+    <button class="status-btn" data-level="mastered" onclick="markCurrent('mastered')"><span class="dot"></span>Mastered</button>
+  </div>
+  <div class="status-note" id="status-note"></div>
+
   <div class="util">
     <button onclick="shuffle(event)">🔀 Shuffle</button>
     <button onclick="resetOrder(event)">↺ Reset order</button>
@@ -261,7 +288,7 @@
     <div class="varbank-body" id="vb-body"></div>
   </div>
 
-  <p class="foot">Keys: <kbd>Space</kbd> flip · <kbd>←</kbd> <kbd>→</kbd> navigate · <kbd>S</kbd> shuffle</p>
+  <p class="foot">Pick one or more topics above · <kbd>Space</kbd> flip · <kbd>←</kbd> <kbd>→</kbd> navigate · <kbd>S</kbd> shuffle · <kbd>1</kbd> not understood <kbd>2</kbd> understood <kbd>3</kbd> mastered</p>
 </div>
 
 <script>
@@ -361,19 +388,42 @@ function renderBase(str){
   });
 }
 
-let deck = [...CARDS];
-let order = deck.map((_,i)=>i);
+let deck = [];
+let order = [];
 let pos = 0;
-let activeCat = "All";
+let selectedCats = new Set();          // empty set = "All"
+const UNDERSTOOD_KEEP = 0.34;          // understood cards appear ~1/3 as often
 
 const card = document.getElementById('card');
 
-function applyFilter(){
-  deck = activeCat==="All" ? [...CARDS] : CARDS.filter(c=>c.cat===activeCat);
-  order = deck.map((_,i)=>i);
-  pos = 0;
-  render();
+/* ---- per-card status, persisted in localStorage ---- */
+const STORE_KEY = 'oat-deck-status-v1';
+let statusMap = loadStatus();
+function loadStatus(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }catch(e){ return {}; } }
+function saveStatus(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(statusMap)); }catch(e){} }
+function cardId(c){ return c.cat + '::' + c.qty; }
+function getStatus(c){ return statusMap[cardId(c)] || 'new'; }   // 'new' | 'understood' | 'mastered'
+function setStatus(c, level){
+  if(level==='new') delete statusMap[cardId(c)];
+  else statusMap[cardId(c)] = level;
+  saveStatus();
 }
+
+function selectedBase(){
+  return selectedCats.size===0 ? CARDS : CARDS.filter(c=>selectedCats.has(c.cat));
+}
+function buildDeck(){
+  const base = selectedBase();
+  deck = base.filter(c=>{
+    const s = getStatus(c);
+    if(s==='mastered')   return false;                 // mastered: never shown
+    if(s==='understood') return Math.random() < UNDERSTOOD_KEEP; // understood: shown less
+    return true;
+  });
+  if(deck.length===0) deck = base.filter(c=>getStatus(c)!=='mastered'); // don't fully empty via thinning
+  order = deck.map((_,i)=>i);
+}
+function applyFilter(){ buildDeck(); pos=0; render(); }
 
 function renderSteps(steps){
   return steps.map((s,i)=>{
@@ -388,6 +438,7 @@ function renderSteps(steps){
 }
 
 function render(){
+  if(order.length===0){ renderEmpty(); return; }
   const c = deck[order[pos]];
   card.classList.remove('flipped');
   document.getElementById('f-cat').textContent = c.cat;
@@ -417,32 +468,80 @@ function render(){
   }
   document.getElementById('idx').textContent = pos+1;
   document.getElementById('total').textContent = deck.length;
+  updateStatusUI(c);
 }
 
-function flip(){ card.classList.toggle('flipped'); }
-function next(e){ if(e)e.stopPropagation(); pos=(pos+1)%deck.length; render(); }
-function prev(e){ if(e)e.stopPropagation(); pos=(pos-1+deck.length)%deck.length; render(); }
+function renderEmpty(){
+  card.classList.remove('flipped','build');
+  document.getElementById('f-cat').textContent = '';
+  document.getElementById('f-qty').textContent = 'All caught up 🎉';
+  document.getElementById('f-sym').textContent = 'No cards left in this selection';
+  document.getElementById('f-hint').textContent = 'Reset, change filters, or mark cards "Not understood"';
+  document.getElementById('idx').textContent = '0';
+  document.getElementById('total').textContent = '0';
+  updateStatusUI(null);
+}
+
+function updateStatusUI(c){
+  const lvl = c ? getStatus(c) : null;
+  document.querySelectorAll('.status-btn').forEach(b=>{
+    b.classList.toggle('active', !!c && b.dataset.level===lvl);
+    b.disabled = !c;
+  });
+  let mastered=0, understood=0;
+  CARDS.forEach(x=>{ const s=getStatus(x); if(s==='mastered')mastered++; else if(s==='understood')understood++; });
+  document.getElementById('status-note').textContent =
+    `Mastered ${mastered} (hidden) · Understood ${understood} (shown less)`;
+}
+
+function markCurrent(level){
+  if(order.length===0) return;
+  const c = deck[order[pos]];
+  setStatus(c, getStatus(c)===level ? 'new' : level);   // tap the active level again to clear it
+  if(getStatus(c)==='mastered'){
+    order.splice(pos,1);                                 // hide it from this rotation immediately
+    if(order.length===0){ render(); return; }
+    if(pos>=order.length) pos=0;
+    render();
+  } else {
+    if(order.length>1) pos=(pos+1)%order.length;         // keep studying: advance to next card
+    render();
+  }
+}
+
+function flip(){ if(order.length) card.classList.toggle('flipped'); }
+function next(e){ if(e)e.stopPropagation(); if(!order.length)return; pos=(pos+1)%order.length; render(); }
+function prev(e){ if(e)e.stopPropagation(); if(!order.length)return; pos=(pos-1+order.length)%order.length; render(); }
 function shuffle(e){
   if(e)e.stopPropagation();
+  buildDeck();
   for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
   pos=0; render();
 }
-function resetOrder(e){ if(e)e.stopPropagation(); order=deck.map((_,i)=>i); pos=0; render(); }
+function resetOrder(e){ if(e)e.stopPropagation(); buildDeck(); pos=0; render(); }
 
-// chips
+// chips — multi-select; "All" clears the selection (= every category)
 const fwrap = document.getElementById('filters');
 CATS.forEach(cat=>{
   const b=document.createElement('button');
   b.className='chip'+(cat==="All"?' active':'');
   b.textContent=cat;
+  b.dataset.cat=cat;
   b.onclick=()=>{
-    activeCat=cat;
-    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
+    if(cat==='All'){ selectedCats.clear(); }
+    else if(selectedCats.has(cat)){ selectedCats.delete(cat); }
+    else { selectedCats.add(cat); }
+    updateChips();
     applyFilter();
   };
   fwrap.appendChild(b);
 });
+function updateChips(){
+  document.querySelectorAll('.chip').forEach(b=>{
+    const cat=b.dataset.cat;
+    b.classList.toggle('active', cat==='All' ? selectedCats.size===0 : selectedCats.has(cat));
+  });
+}
 
 // keyboard
 document.addEventListener('keydown',e=>{
@@ -450,6 +549,9 @@ document.addEventListener('keydown',e=>{
   else if(e.code==='ArrowRight')next();
   else if(e.code==='ArrowLeft')prev();
   else if(e.key==='s'||e.key==='S')shuffle();
+  else if(e.key==='1')markCurrent('new');
+  else if(e.key==='2')markCurrent('understood');
+  else if(e.key==='3')markCurrent('mastered');
 });
 
 // ---- variable & unit bank ----
@@ -510,9 +612,7 @@ function renderVarbank(){
 }
 function toggleVarbank(){ document.getElementById('varbank').classList.toggle('open'); }
 renderVarbank();
-
-document.getElementById('total').textContent = deck.length;
-render();
+applyFilter();   // builds the deck (filters + status) and renders
 </script>
 </body>
 </html>
