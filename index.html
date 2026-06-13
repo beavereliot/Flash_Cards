@@ -265,6 +265,7 @@
   <div class="util">
     <button onclick="shuffle(event)">🔀 Shuffle</button>
     <button onclick="resetOrder(event)">↺ Reset order</button>
+    <button onclick="resetProgress(event)">⨯ Reset progress</button>
   </div>
 
   <div class="legend">
@@ -519,6 +520,15 @@ function shuffle(e){
   pos=0; render();
 }
 function resetOrder(e){ if(e)e.stopPropagation(); buildDeck(); pos=0; render(); }
+function resetProgress(e){
+  if(e)e.stopPropagation();
+  const n = Object.keys(statusMap).length;
+  if(n===0){ return; }   // nothing to clear
+  if(!confirm(`Reset all progress? This clears Understood/Mastered marks on ${n} card${n===1?'':'s'}.`)) return;
+  statusMap = {};
+  saveStatus();
+  buildDeck(); pos=0; render();
+}
 
 // chips — multi-select; "All" clears the selection (= every category)
 const fwrap = document.getElementById('filters');
