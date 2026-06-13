@@ -162,6 +162,33 @@
   .foot{margin-top:18px;font-size:11px;color:var(--muted);text-align:center;line-height:1.5}
   kbd{font-family:'IBM Plex Mono',monospace;background:var(--panel);border:1px solid var(--line);
       border-radius:5px;padding:1px 6px;font-size:11px;color:var(--ink)}
+
+  /* variable bank */
+  .varbank{margin-top:16px;border:1px solid var(--line);border-radius:14px;
+    background:rgba(22,33,47,.5);overflow:hidden}
+  .varbank-head{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
+    padding:14px 16px;cursor:pointer;background:transparent;border:none;text-align:left;
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);transition:.15s;
+  }
+  .varbank-head:hover{color:var(--ink)}
+  .varbank-head .arrow{transition:transform .2s;color:var(--amber)}
+  .varbank.open .varbank-head .arrow{transform:rotate(90deg)}
+  .varbank-body{display:none;padding:0 16px 16px}
+  .varbank.open .varbank-body{display:block}
+  .vargroup{margin-top:14px}
+  .vargroup .gh{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--amber);margin-bottom:8px;
+  }
+  .vargrid{display:grid;grid-template-columns:1fr 1fr;gap:5px 18px}
+  @media (max-width:430px){.vargrid{grid-template-columns:1fr}}
+  .varrow{display:flex;align-items:baseline;gap:8px;font-size:12.5px;line-height:1.35}
+  .varrow .vs{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--ink);
+    min-width:46px;flex:0 0 auto}
+  .varrow .veq{color:var(--muted)}
+  .varrow .vm{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -224,6 +251,14 @@
       <div class="leg"><span class="sw" style="background:var(--d-mol)"></span><b>mol</b> amount</div>
       <div class="leg"><span class="sw" style="background:var(--d-cd)"></span><b>cd</b> luminous</div>
     </div>
+  </div>
+
+  <div class="varbank open" id="varbank">
+    <button class="varbank-head" onclick="toggleVarbank()">
+      <span>Variable &amp; unit bank<span id="vb-count"></span></span>
+      <span class="arrow">▸</span>
+    </button>
+    <div class="varbank-body" id="vb-body"></div>
   </div>
 
   <p class="foot">Keys: <kbd>Space</kbd> flip · <kbd>←</kbd> <kbd>→</kbd> navigate · <kbd>S</kbd> shuffle</p>
@@ -416,6 +451,65 @@ document.addEventListener('keydown',e=>{
   else if(e.code==='ArrowLeft')prev();
   else if(e.key==='s'||e.key==='S')shuffle();
 });
+
+// ---- variable & unit bank ----
+const VARS = [
+  {group:"Mechanics", items:[
+    ["m","mass"], ["d, Δd","distance / displacement"], ["x","position"],
+    ["v, s","velocity / speed"], ["v₀","initial velocity"], ["a","acceleration"],
+    ["g","acceleration due to gravity (≈9.8 m/s²)"], ["t","time"], ["F","force"],
+    ["Fg","weight (force of gravity)"], ["FN","normal force"], ["Ff","friction force"],
+    ["μ","coefficient of friction"], ["p","momentum"], ["J","impulse"], ["W","work"],
+    ["KE","kinetic energy"], ["PE, U","potential energy"], ["P","power"], ["P","pressure"],
+    ["ρ","density"], ["τ","torque"], ["θ","angle"], ["r","radius / lever arm"],
+    ["f","frequency"], ["T","period"], ["ω","angular velocity"], ["α","angular acceleration"],
+    ["I","moment of inertia"], ["L","angular momentum"], ["k","spring constant"],
+    ["A","amplitude / area"], ["λ","wavelength"],
+  ]},
+  {group:"Thermodynamics", items:[
+    ["T","temperature"], ["Q","heat"], ["c","specific heat"], ["L","latent heat"],
+    ["n","number of moles"], ["K","thermal conductivity"],
+  ]},
+  {group:"Electricity & Magnetism", items:[
+    ["q, Q","electric charge"], ["I","current"], ["E","electric field"],
+    ["V, ΔV","voltage / electric potential"], ["R","resistance"], ["ρ","resistivity"],
+    ["C","capacitance"], ["P","electrical power"],
+  ]},
+  {group:"Optics", items:[
+    ["n","index of refraction"], ["M","magnification"], ["f","focal length"],
+    ["P","lens power (diopters)"], ["dₒ","object distance"], ["dᵢ","image distance"],
+  ]},
+  {group:"Constants", items:[
+    ["c","speed of light (3×10⁸ m/s)"], ["G","gravitational constant"],
+    ["k","Coulomb's constant"], ["ε₀","permittivity of free space"],
+    ["kB","Boltzmann constant"], ["R","gas constant"], ["NA","Avogadro's number"],
+  ]},
+  {group:"Units", items:[
+    ["kg","kilogram (mass)"], ["m","meter (length)"], ["s","second (time)"],
+    ["A","ampere (current)"], ["K","kelvin (temperature)"], ["mol","mole (amount)"],
+    ["cd","candela (luminous intensity)"], ["N","newton — kg·m/s² (force)"],
+    ["J","joule — N·m (energy)"], ["W","watt — J/s (power)"], ["Pa","pascal — N/m² (pressure)"],
+    ["Hz","hertz — s⁻¹ (frequency)"], ["C","coulomb — A·s (charge)"],
+    ["V","volt — J/C (potential)"], ["Ω","ohm — V/A (resistance)"],
+    ["F","farad — C/V (capacitance)"], ["D","diopter — m⁻¹ (lens power)"],
+    ["rad","radian (angle, dimensionless)"],
+  ]},
+];
+
+function renderVarbank(){
+  const body = document.getElementById('vb-body');
+  let total = 0;
+  body.innerHTML = VARS.map(g=>{
+    total += g.items.length;
+    const rows = g.items.map(([sym,mean])=>
+      `<div class="varrow"><span class="vs">${sym}</span><span class="veq">=</span><span class="vm">${mean}</span></div>`
+    ).join('');
+    return `<div class="vargroup"><div class="gh">${g.group}</div><div class="vargrid">${rows}</div></div>`;
+  }).join('');
+  document.getElementById('vb-count').textContent = " · " + total + " entries";
+}
+function toggleVarbank(){ document.getElementById('varbank').classList.toggle('open'); }
+renderVarbank();
 
 document.getElementById('total').textContent = deck.length;
 render();
