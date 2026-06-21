@@ -125,6 +125,27 @@
   .connector{text-align:center;color:var(--amber);font-size:13px;line-height:1;margin:3px 0}
   .tie{font-size:10.5px;color:var(--amber);margin-top:6px;font-style:italic}
 
+  /* equation cards */
+  .card.eqmode{aspect-ratio:auto;min-height:300px}
+  .card.eqmode .back{justify-content:flex-start}
+  #b-eq{display:none;flex-direction:column;width:100%;margin-top:2px}
+  .eq-formula{
+    font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:600;
+    color:var(--amber);text-align:center;line-height:1.35;letter-spacing:.01em;
+    padding:16px 10px;border:1px solid var(--line);border-radius:12px;
+    background:rgba(13,21,33,.55);
+  }
+  .eq-where{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);margin:15px 0 9px;
+  }
+  .eq-vars{display:flex;flex-direction:column;gap:5px}
+  .eq-var{display:flex;align-items:baseline;gap:10px;font-size:13px;line-height:1.35}
+  .eq-var .ev-s{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--ink);
+    min-width:58px;flex:0 0 auto}
+  .eq-var .ev-m{color:var(--muted)}
+  #b-eq .note{width:100%}
+
   /* controls */
   .controls{display:flex;align-items:center;justify-content:space-between;gap:10px}
   .nav{
@@ -246,6 +267,7 @@
           <div class="note" id="b-note" style="display:none"></div>
         </div>
         <div id="b-build"></div>
+        <div id="b-eq"></div>
       </div>
     </div>
   </div>
@@ -353,6 +375,167 @@ const CARDS = [
   {cat:"Base units", qty:"Amount of substance", sym:"n", common:"mole", base:"[mol]"},
   {cat:"Base units", qty:"Luminous intensity", sym:"Iᵥ", common:"candela", base:"[cd]"},
 
+  // ---- EQUATIONS (formula recall — kept separate from the unit-breakdown cards) ----
+  // Mechanics
+  {cat:"Equations", qty:"Newton's Second Law", sym:"force, mass, acceleration", eq:true,
+    formula:"F = m · a",
+    vars:[["F","net force (N)"],["m","mass (kg)"],["a","acceleration (m/s²)"]],
+    note:"The anchor of mechanics — net force sets acceleration, not velocity."},
+  {cat:"Equations", qty:"Weight", sym:"force of gravity on a mass", eq:true,
+    formula:"Fg = m · g",
+    vars:[["Fg","weight (N)"],["m","mass (kg)"],["g","grav. acceleration ≈ 9.8 m/s²"]]},
+  {cat:"Equations", qty:"Kinematics — velocity", sym:"no displacement term", eq:true,
+    formula:"v = v₀ + a · t",
+    vars:[["v","final velocity (m/s)"],["v₀","initial velocity (m/s)"],["a","acceleration (m/s²)"],["t","time (s)"]]},
+  {cat:"Equations", qty:"Kinematics — timeless", sym:"no time term", eq:true,
+    formula:"v² = v₀² + 2 · a · Δx",
+    vars:[["v","final velocity (m/s)"],["v₀","initial velocity (m/s)"],["a","acceleration (m/s²)"],["Δx","displacement (m)"]]},
+  {cat:"Equations", qty:"Kinematics — displacement", sym:"no final-velocity term", eq:true,
+    formula:"Δx = v₀ · t + ½ · a · t²",
+    vars:[["Δx","displacement (m)"],["v₀","initial velocity (m/s)"],["a","acceleration (m/s²)"],["t","time (s)"]]},
+  {cat:"Equations", qty:"Friction force", sym:"kinetic or static", eq:true,
+    formula:"Ff = μ · FN",
+    vars:[["Ff","friction force (N)"],["μ","coefficient of friction"],["FN","normal force (N)"]]},
+  {cat:"Equations", qty:"Momentum", sym:"mass in motion", eq:true,
+    formula:"p = m · v",
+    vars:[["p","momentum (kg·m/s)"],["m","mass (kg)"],["v","velocity (m/s)"]]},
+  {cat:"Equations", qty:"Impulse–Momentum Theorem", sym:"force over time", eq:true,
+    formula:"J = F · Δt = Δp",
+    vars:[["J","impulse (N·s)"],["F","force (N)"],["Δt","time interval (s)"],["Δp","change in momentum"]]},
+  {cat:"Equations", qty:"Work", sym:"force through a distance", eq:true,
+    formula:"W = F · d · cos θ",
+    vars:[["W","work (J)"],["F","force (N)"],["d","displacement (m)"],["θ","angle between F and d"]],
+    note:"Only the force component along the motion does work — hence cos θ."},
+  {cat:"Equations", qty:"Kinetic Energy", sym:"energy of motion", eq:true,
+    formula:"KE = ½ · m · v²",
+    vars:[["KE","kinetic energy (J)"],["m","mass (kg)"],["v","speed (m/s)"]]},
+  {cat:"Equations", qty:"Gravitational PE", sym:"energy of height", eq:true,
+    formula:"PE = m · g · h",
+    vars:[["PE","potential energy (J)"],["m","mass (kg)"],["g","≈ 9.8 m/s²"],["h","height (m)"]]},
+  {cat:"Equations", qty:"Power", sym:"rate of doing work", eq:true,
+    formula:"P = W / t = F · v",
+    vars:[["P","power (W)"],["W","work (J)"],["t","time (s)"],["F","force (N)"],["v","velocity (m/s)"]]},
+  {cat:"Equations", qty:"Hooke's Law", sym:"spring restoring force", eq:true,
+    formula:"F = −k · x",
+    vars:[["F","restoring force (N)"],["k","spring constant (N/m)"],["x","displacement from equilibrium (m)"]],
+    note:"The minus sign means the force opposes the stretch/compression."},
+  {cat:"Equations", qty:"Elastic PE", sym:"energy stored in a spring", eq:true,
+    formula:"PE = ½ · k · x²",
+    vars:[["PE","elastic potential energy (J)"],["k","spring constant (N/m)"],["x","displacement (m)"]]},
+  {cat:"Equations", qty:"Centripetal Acceleration", sym:"toward the center", eq:true,
+    formula:"a_c = v² / r",
+    vars:[["a_c","centripetal acceleration (m/s²)"],["v","speed (m/s)"],["r","radius (m)"]]},
+  {cat:"Equations", qty:"Centripetal Force", sym:"net inward force", eq:true,
+    formula:"Fc = m · v² / r",
+    vars:[["Fc","centripetal force (N)"],["m","mass (kg)"],["v","speed (m/s)"],["r","radius (m)"]]},
+  {cat:"Equations", qty:"Torque", sym:"rotational analog of force", eq:true,
+    formula:"τ = r · F · sin θ",
+    vars:[["τ","torque (N·m)"],["r","lever arm (m)"],["F","force (N)"],["θ","angle between r and F"]]},
+  {cat:"Equations", qty:"Newton's Law of Gravitation", sym:"force between two masses", eq:true,
+    formula:"F = G · m₁ · m₂ / r²",
+    vars:[["F","gravitational force (N)"],["G","6.67×10⁻¹¹ N·m²/kg²"],["m₁,m₂","masses (kg)"],["r","separation (m)"]]},
+  {cat:"Equations", qty:"Density", sym:"mass per volume", eq:true,
+    formula:"ρ = m / V",
+    vars:[["ρ","density (kg/m³)"],["m","mass (kg)"],["V","volume (m³)"]]},
+  {cat:"Equations", qty:"Pressure", sym:"force per area", eq:true,
+    formula:"P = F / A",
+    vars:[["P","pressure (Pa)"],["F","force (N)"],["A","area (m²)"]]},
+
+  // Fluids
+  {cat:"Equations", qty:"Hydrostatic Pressure", sym:"pressure with depth", eq:true,
+    formula:"P = P₀ + ρ · g · h",
+    vars:[["P","pressure at depth (Pa)"],["P₀","surface pressure (Pa)"],["ρ","fluid density (kg/m³)"],["g","≈ 9.8 m/s²"],["h","depth (m)"]]},
+  {cat:"Equations", qty:"Buoyant Force", sym:"Archimedes' principle", eq:true,
+    formula:"Fb = ρ · V · g",
+    vars:[["Fb","buoyant force (N)"],["ρ","fluid density (kg/m³)"],["V","displaced volume (m³)"],["g","≈ 9.8 m/s²"]],
+    note:"Equals the weight of the fluid displaced."},
+  {cat:"Equations", qty:"Continuity Equation", sym:"conservation of flow", eq:true,
+    formula:"A₁ · v₁ = A₂ · v₂",
+    vars:[["A","cross-sectional area (m²)"],["v","fluid speed (m/s)"]],
+    note:"Narrower pipe → faster flow."},
+  {cat:"Equations", qty:"Bernoulli's Equation", sym:"energy conservation in fluids", eq:true,
+    formula:"P + ½ρv² + ρgh = constant",
+    vars:[["P","pressure (Pa)"],["ρ","density (kg/m³)"],["v","speed (m/s)"],["g","≈ 9.8 m/s²"],["h","height (m)"]]},
+
+  // SHM & Waves
+  {cat:"Equations", qty:"Spring Period", sym:"mass on a spring", eq:true,
+    formula:"T = 2π · √(m / k)",
+    vars:[["T","period (s)"],["m","mass (kg)"],["k","spring constant (N/m)"]]},
+  {cat:"Equations", qty:"Pendulum Period", sym:"simple pendulum", eq:true,
+    formula:"T = 2π · √(L / g)",
+    vars:[["T","period (s)"],["L","length (m)"],["g","≈ 9.8 m/s²"]],
+    note:"Independent of mass and (small) amplitude."},
+  {cat:"Equations", qty:"Frequency & Period", sym:"reciprocals", eq:true,
+    formula:"f = 1 / T",
+    vars:[["f","frequency (Hz)"],["T","period (s)"]]},
+  {cat:"Equations", qty:"Wave Speed", sym:"frequency × wavelength", eq:true,
+    formula:"v = f · λ",
+    vars:[["v","wave speed (m/s)"],["f","frequency (Hz)"],["λ","wavelength (m)"]]},
+
+  // Thermodynamics
+  {cat:"Equations", qty:"Heat — Temperature Change", sym:"no phase change", eq:true,
+    formula:"Q = m · c · ΔT",
+    vars:[["Q","heat (J)"],["m","mass (kg)"],["c","specific heat (J/kg·K)"],["ΔT","temperature change (K)"]]},
+  {cat:"Equations", qty:"Heat — Phase Change", sym:"melting / boiling", eq:true,
+    formula:"Q = m · L",
+    vars:[["Q","heat (J)"],["m","mass (kg)"],["L","latent heat (J/kg)"]],
+    note:"Temperature stays constant during a phase change."},
+  {cat:"Equations", qty:"Ideal Gas Law", sym:"PV = nRT", eq:true,
+    formula:"P · V = n · R · T",
+    vars:[["P","pressure (Pa)"],["V","volume (m³)"],["n","moles"],["R","8.314 J/mol·K"],["T","temperature (K)"]]},
+  {cat:"Equations", qty:"Linear Thermal Expansion", sym:"length vs temperature", eq:true,
+    formula:"ΔL = α · L₀ · ΔT",
+    vars:[["ΔL","change in length (m)"],["α","expansion coefficient (1/K)"],["L₀","original length (m)"],["ΔT","temp change (K)"]]},
+
+  // Electricity & Magnetism
+  {cat:"Equations", qty:"Coulomb's Law", sym:"force between charges", eq:true,
+    formula:"F = k · q₁ · q₂ / r²",
+    vars:[["F","electric force (N)"],["k","8.99×10⁹ N·m²/C²"],["q₁,q₂","charges (C)"],["r","separation (m)"]]},
+  {cat:"Equations", qty:"Electric Field", sym:"force per charge", eq:true,
+    formula:"E = F / q = k · Q / r²",
+    vars:[["E","field strength (N/C)"],["F","force (N)"],["q","test charge (C)"],["Q","source charge (C)"],["r","distance (m)"]]},
+  {cat:"Equations", qty:"Electric Potential Energy", sym:"two point charges", eq:true,
+    formula:"PE = k · q₁ · q₂ / r",
+    vars:[["PE","potential energy (J)"],["k","8.99×10⁹ N·m²/C²"],["q₁,q₂","charges (C)"],["r","separation (m)"]]},
+  {cat:"Equations", qty:"Voltage", sym:"energy per charge", eq:true,
+    formula:"V = W / q",
+    vars:[["V","potential difference (V)"],["W","work / energy (J)"],["q","charge (C)"]]},
+  {cat:"Equations", qty:"Ohm's Law", sym:"V, I, R", eq:true,
+    formula:"V = I · R",
+    vars:[["V","voltage (V)"],["I","current (A)"],["R","resistance (Ω)"]]},
+  {cat:"Equations", qty:"Electrical Power", sym:"three equivalent forms", eq:true,
+    formula:"P = I · V = I² · R = V² / R",
+    vars:[["P","power (W)"],["I","current (A)"],["V","voltage (V)"],["R","resistance (Ω)"]]},
+  {cat:"Equations", qty:"Capacitance", sym:"charge per volt", eq:true,
+    formula:"C = Q / V",
+    vars:[["C","capacitance (F)"],["Q","charge (C)"],["V","voltage (V)"]]},
+  {cat:"Equations", qty:"Current", sym:"charge per time", eq:true,
+    formula:"I = Q / t",
+    vars:[["I","current (A)"],["Q","charge (C)"],["t","time (s)"]]},
+  {cat:"Equations", qty:"Resistors in Series", sym:"add directly", eq:true,
+    formula:"R = R₁ + R₂ + …",
+    vars:[["R","total resistance (Ω)"],["R₁,R₂","individual resistors (Ω)"]]},
+  {cat:"Equations", qty:"Resistors in Parallel", sym:"add reciprocals", eq:true,
+    formula:"1/R = 1/R₁ + 1/R₂ + …",
+    vars:[["R","total resistance (Ω)"],["R₁,R₂","individual resistors (Ω)"]]},
+
+  // Optics
+  {cat:"Equations", qty:"Index of Refraction", sym:"speed ratio", eq:true,
+    formula:"n = c / v",
+    vars:[["n","index of refraction (unitless)"],["c","speed of light (3×10⁸ m/s)"],["v","speed in medium (m/s)"]]},
+  {cat:"Equations", qty:"Snell's Law", sym:"refraction at a boundary", eq:true,
+    formula:"n₁ · sin θ₁ = n₂ · sin θ₂",
+    vars:[["n₁,n₂","indices of refraction"],["θ₁,θ₂","angles from normal"]]},
+  {cat:"Equations", qty:"Thin Lens / Mirror", sym:"object & image distance", eq:true,
+    formula:"1/f = 1/dₒ + 1/dᵢ",
+    vars:[["f","focal length (m)"],["dₒ","object distance (m)"],["dᵢ","image distance (m)"]]},
+  {cat:"Equations", qty:"Magnification", sym:"image vs object", eq:true,
+    formula:"M = −dᵢ / dₒ = hᵢ / hₒ",
+    vars:[["M","magnification (unitless)"],["dᵢ","image distance (m)"],["dₒ","object distance (m)"],["hᵢ","image height"],["hₒ","object height"]]},
+  {cat:"Equations", qty:"Lens Power", sym:"diopters", eq:true,
+    formula:"P = 1 / f",
+    vars:[["P","power (D = m⁻¹)"],["f","focal length (m)"]]},
+
   // ---- BUILD-UPS ----
   {cat:"Build-ups", qty:"Force → Energy → Power", sym:"the mechanical chain", build:true, steps:[
     {f:"start with base units", u:"kg · m · s", b:"[kg]  [m]  [s]"},
@@ -377,7 +560,7 @@ const CARDS = [
   ]},
 ];
 
-const CATS = ["All","Mechanics","Thermo","E & M","Optics","Constants","Base units","Build-ups"];
+const CATS = ["All","Equations","Mechanics","Thermo","E & M","Optics","Constants","Base units","Build-ups"];
 
 // render base-unit string with colored tokens
 function renderBase(str){
@@ -426,6 +609,17 @@ function buildDeck(){
 }
 function applyFilter(){ buildDeck(); pos=0; render(); }
 
+function renderEq(c){
+  const vars = c.vars.map(([s,m])=>
+    `<div class="eq-var"><span class="ev-s">${s}</span><span class="ev-m">${m}</span></div>`
+  ).join('');
+  const note = c.note ? `<div class="note">${c.note}</div>` : '';
+  return `<div class="eq-formula">${c.formula}</div>
+    <div class="eq-where">where</div>
+    <div class="eq-vars">${vars}</div>
+    ${note}`;
+}
+
 function renderSteps(steps){
   return steps.map((s,i)=>{
     const conn = i>0 ? '<div class="connector">↓</div>' : '';
@@ -450,17 +644,29 @@ function render(){
 
   const std = document.getElementById('b-standard');
   const bld = document.getElementById('b-build');
+  const eqEl = document.getElementById('b-eq');
   if(c.build){
     card.classList.add('build');
+    card.classList.remove('eqmode');
     document.getElementById('f-hint').textContent = "tap to see the chain →";
     std.style.display = 'none';
     bld.style.display = 'flex';
+    eqEl.style.display = 'none';
     bld.innerHTML = renderSteps(c.steps);
-  } else {
+  } else if(c.eq){
+    card.classList.add('eqmode');
     card.classList.remove('build');
+    document.getElementById('f-hint').textContent = "tap to reveal the equation →";
+    std.style.display = 'none';
+    bld.style.display = 'none';
+    eqEl.style.display = 'flex';
+    eqEl.innerHTML = renderEq(c);
+  } else {
+    card.classList.remove('build','eqmode');
     document.getElementById('f-hint').textContent = "tap to reveal units →";
     std.style.display = 'block';
     bld.style.display = 'none';
+    eqEl.style.display = 'none';
     document.getElementById('b-common').textContent = c.common;
     document.getElementById('b-base').innerHTML = renderBase(c.base);
     const noteEl = document.getElementById('b-note');
@@ -473,7 +679,7 @@ function render(){
 }
 
 function renderEmpty(){
-  card.classList.remove('flipped','build');
+  card.classList.remove('flipped','build','eqmode');
   document.getElementById('f-cat').textContent = '';
   document.getElementById('f-qty').textContent = 'All caught up 🎉';
   document.getElementById('f-sym').textContent = 'No cards left in this selection';
