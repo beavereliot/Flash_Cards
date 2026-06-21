@@ -359,7 +359,18 @@ const CARDS = [
   {cat:"Optics", qty:"Lens power", sym:"P", common:"D (diopter)  =  m⁻¹", base:"1/[m]"},
 
   // ---- CONSTANTS ----
-  {cat:"Constants", qty:"Speed of light", sym:"c", common:"m/s", base:"[m]/[s]"},
+  {cat:"Constants", qty:"Speed of light", sym:"c", common:"m/s", base:"[m]/[s]", note:"c = 3.00×10⁸ m/s — the speed of light (and all EM waves) in a vacuum."},
+  {cat:"Constants", qty:"Pressure Unit Conversions", sym:"1 atm equivalents", conv:true,
+    headline:"1 atm =",
+    rows:[
+      ["101,325 Pa","pascals (N/m²)"],
+      ["101.3 kPa","kilopascals"],
+      ["1.013 bar","bar"],
+      ["760 mmHg","millimeters of mercury"],
+      ["760 torr","torr"],
+      ["14.7 psi","pounds per square inch"],
+    ],
+    note:"Standard atmospheric pressure at sea level — memorize 101 kPa and 760 mmHg."},
   {cat:"Constants", qty:"Gravitational constant", sym:"G", common:"N·m²/kg²", base:"[m]3/([kg]·[s]2)"},
   {cat:"Constants", qty:"Coulomb's constant", sym:"k", common:"N·m²/C²", base:"[kg]·[m]3/([A]2·[s]4)"},
   {cat:"Constants", qty:"Permittivity of free space", sym:"ε₀", common:"C²/(N·m²)  =  F/m", base:"[A]2·[s]4/([kg]·[m]3)"},
@@ -620,6 +631,17 @@ function renderEq(c){
     ${note}`;
 }
 
+function renderConv(c){
+  const rows = c.rows.map(([a,b])=>
+    `<div class="eq-var"><span class="ev-s">${a}</span><span class="ev-m">${b}</span></div>`
+  ).join('');
+  const note = c.note ? `<div class="note">${c.note}</div>` : '';
+  return `<div class="eq-formula">${c.headline}</div>
+    <div class="eq-where">equivalent to</div>
+    <div class="eq-vars">${rows}</div>
+    ${note}`;
+}
+
 function renderSteps(steps){
   return steps.map((s,i)=>{
     const conn = i>0 ? '<div class="connector">↓</div>' : '';
@@ -661,6 +683,14 @@ function render(){
     bld.style.display = 'none';
     eqEl.style.display = 'flex';
     eqEl.innerHTML = renderEq(c);
+  } else if(c.conv){
+    card.classList.add('eqmode');
+    card.classList.remove('build');
+    document.getElementById('f-hint').textContent = "tap to reveal conversions →";
+    std.style.display = 'none';
+    bld.style.display = 'none';
+    eqEl.style.display = 'flex';
+    eqEl.innerHTML = renderConv(c);
   } else {
     card.classList.remove('build','eqmode');
     document.getElementById('f-hint').textContent = "tap to reveal units →";
